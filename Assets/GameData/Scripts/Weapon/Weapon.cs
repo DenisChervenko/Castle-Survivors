@@ -33,8 +33,6 @@ public abstract class Weapon : MonoBehaviour, IUpdatable
     [SerializeField] protected float _maxSize;
     [SerializeField] protected int _maxCount;
 
-    
-
     public void Start()
     {
         EventController.eventController.onAddUpdatable?.Invoke(this);

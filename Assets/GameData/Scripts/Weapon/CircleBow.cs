@@ -73,7 +73,7 @@ public class CircleBow : Weapon
         for(int i = _activeProjectile.Count - 1; i >= 0; i--)
         {
             var arrow = _activeProjectile[i];
-            if(!arrow.Move(_weaponProjectileSpeed))
+            if(!arrow.MoveForward(_weaponProjectileSpeed))
             {
                 int last = _activeProjectile.Count - 1;
                 _activeProjectile[i] = _activeProjectile[last];

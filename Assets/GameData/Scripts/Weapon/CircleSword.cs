@@ -45,7 +45,7 @@ public class CircleSword : Weapon
         }
     }
 
-    public override void NewCountWeapon()
+    public override void UpgradeCount()
     {
         _weaponCount++;
         _readyWeapons.Add(Instantiate(_readyWeapons[0]));
