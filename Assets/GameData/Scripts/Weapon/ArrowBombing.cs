@@ -32,6 +32,7 @@ public class ArrowBombing : Weapon
 
         _arrowReady.Add(arrowReadyObject.GetComponent<ProjectileArrow>());
 
+        _arrowReady[0].StateControll(false);
         Destroy(readyPrefab.gameObject);
     }
     public override void WeaponBehaviour()
@@ -39,23 +40,41 @@ public class ArrowBombing : Weapon
         _elapsedTime += _weaponAttackSpeed * Time.deltaTime;
         if(_elapsedTime > 2)
         {
-            _arrowActive.Add(_arrowReady[_takedArrowIndex]);
+            if( _arrowActive.Count != 0 &&_arrowActive[_takedArrowIndex].IsEndLifepath)
+            {
+                int lastIndex = _arrowActive.Count - 1;
+                if(lastIndex == _takedArrowIndex)
+                    _arrowActive.RemoveAt(_takedArrowIndex);
+                else
+                {
+                    var lastElement = _arrowActive[lastIndex];
+                    _arrowActive[lastIndex] = _arrowActive[_takedArrowIndex];
+                    _arrowActive[_takedArrowIndex] = lastElement;
+                    _arrowActive.RemoveAt(lastIndex);
+                }
+                
+            }
 
-            float x = Random.Range(transform.position.x - _weaponRangeZone,
-            transform.position.x + _weaponRangeZone);
-            float z = Random.Range(transform.position.z - _weaponRangeZone,
-            transform.position.z + _weaponRangeZone);
-            float angle = Random.Range(0, 360);
+            if(!_arrowActive[_takedArrowIndex].IsMoveNow)
+            {
+                _arrowActive.Add(_arrowReady[_takedArrowIndex]);
 
-            Vector3 randomPosition = new Vector3(x, 20, z);
-            _arrowActive[_takedArrowIndex].SetTransform(randomPosition, Vector3.one * _weaponSize, angle);
-            _arrowActive[_takedArrowIndex].StateControll(true);
+                float x = Random.Range(transform.position.x - _weaponRangeZone,
+                transform.position.x + _weaponRangeZone);
+                float z = Random.Range(transform.position.z - _weaponRangeZone,
+                transform.position.z + _weaponRangeZone);
+                float angle = Random.Range(0, 360);
+
+                Vector3 randomPosition = new Vector3(x, 20, z);
+                _arrowActive[_takedArrowIndex].SetTransform(randomPosition, Vector3.one, angle);
+                _arrowActive[_takedArrowIndex].StateControll(true);
+
+                _elapsedTime = 0;  
+            }
 
             _takedArrowIndex++;
-            if (_takedArrowIndex == _arrowReady.Count)
-                _takedArrowIndex = 0;
-
-            _elapsedTime = 0;
+                if (_takedArrowIndex == _arrowReady.Count)
+                    _takedArrowIndex = 0;
         }
     }
     public override void Projectile()
