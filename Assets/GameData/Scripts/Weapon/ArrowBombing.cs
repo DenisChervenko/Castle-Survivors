@@ -27,7 +27,7 @@ public class ArrowBombing : Weapon
             arrowReadyObject.transform.position.x + _weaponSize);
             z = Random.Range(arrowReadyObject.transform.position.z - _weaponSize,
             arrowReadyObject.transform.position.z + _weaponSize);
-            prefab.position = new Vector3(x, arrowReadyObject.transform.position.y, z);            
+            prefab.position = new Vector3(x, arrowReadyObject.transform.position.y, z);
         }
 
         _arrowReady.Add(arrowReadyObject.GetComponent<ProjectileArrow>());
@@ -38,62 +38,67 @@ public class ArrowBombing : Weapon
     public override void WeaponBehaviour()
     {
         _elapsedTime += _weaponAttackSpeed * Time.deltaTime;
-        if(_elapsedTime > 2)
+        if (_elapsedTime > 2 && _arrowActive.Count == 0)
         {
-            if( _arrowActive.Count != 0 &&_arrowActive[_takedArrowIndex].IsEndLifepath)
-            {
-                int lastIndex = _arrowActive.Count - 1;
-                if(lastIndex == _takedArrowIndex)
-                    _arrowActive.RemoveAt(_takedArrowIndex);
-                else
-                {
-                    var lastElement = _arrowActive[lastIndex];
-                    _arrowActive[lastIndex] = _arrowActive[_takedArrowIndex];
-                    _arrowActive[_takedArrowIndex] = lastElement;
-                    _arrowActive.RemoveAt(lastIndex);
-                }
-                
-            }
-
-            if(!_arrowActive[_takedArrowIndex].IsMoveNow)
-            {
-                _arrowActive.Add(_arrowReady[_takedArrowIndex]);
-
-                float x = Random.Range(transform.position.x - _weaponRangeZone,
-                transform.position.x + _weaponRangeZone);
-                float z = Random.Range(transform.position.z - _weaponRangeZone,
-                transform.position.z + _weaponRangeZone);
-                float angle = Random.Range(0, 360);
-
-                Vector3 randomPosition = new Vector3(x, 20, z);
-                _arrowActive[_takedArrowIndex].SetTransform(randomPosition, Vector3.one, angle);
-                _arrowActive[_takedArrowIndex].StateControll(true);
-
-                _elapsedTime = 0;  
-            }
-
             _takedArrowIndex++;
-                if (_takedArrowIndex == _arrowReady.Count)
-                    _takedArrowIndex = 0;
+            if (_takedArrowIndex > _arrowActive.Count - 1)
+                _takedArrowIndex = 0;
+
+            foreach (var arrow in _arrowReady)
+            {
+                if (arrow.IsEndLifepath)
+                {
+                    _arrowActive.Add(arrow);
+
+                    float x = Random.Range(transform.position.x - _weaponRangeZone,
+                    transform.position.x + _weaponRangeZone);
+                    float y = Random.Range(18f, 22f);
+                    float z = Random.Range(transform.position.z - _weaponRangeZone,
+                    transform.position.z + _weaponRangeZone);
+                    float angle = Random.Range(0, 360);
+
+                    Vector3 randomPosition = new Vector3(x, y, z);
+                    arrow.SetTransform(randomPosition, Vector3.one, angle);
+                    arrow.StateControll(true);
+                }
+            }
+
+            _elapsedTime = 0;
         }
     }
     public override void Projectile()
     {
-        for(int i = _arrowActive.Count - 1; i >= 0; i--)
+        if (_arrowActive.Count != 0 && _arrowActive[_takedArrowIndex].IsEndLifepath)
         {
-            var arrow = _arrowActive[i];
-            if(!arrow.MoveDownward(_weaponProjectileSpeed))
+            int lastIndex = _arrowActive.Count - 1;
+            if (lastIndex == _takedArrowIndex)
+                _arrowActive.RemoveAt(_takedArrowIndex);
+            else
             {
-                int last = _arrowActive.Count - 1;
-                _arrowActive[i] = _arrowActive[last];
-                _arrowActive.RemoveAt(last);
+                var lastElement = _arrowActive[lastIndex];
+                _arrowActive[lastIndex] = _arrowActive[_takedArrowIndex];
+                _arrowActive[_takedArrowIndex] = lastElement;
+                _arrowActive.RemoveAt(lastIndex);
             }
         }
+
+        foreach (var arrow in _arrowActive)
+            arrow.MoveDownward(_weaponProjectileSpeed * Random.Range(1.2f, 2f));
     }
 
     public override void UpgradeCount()
     {
+        //create part
         _weaponCount++;
-        _arrowReady.Add(Instantiate(_arrowReady[0]));
+        var instance = Instantiate(_arrowReady[0]);
+        instance.StateControll(false);
+        _arrowReady.Add(instance);
+
+        //reset part
+        foreach (var activeArrow in _arrowActive)
+            activeArrow.OnDeactivate();
+
+        _arrowActive.Clear();
+        _elapsedTime = 0;
     }
 }

@@ -4,7 +4,7 @@ using LitMotion.Extensions;
 
 public class ProjectileArrow : MonoBehaviour
 {
-    private bool _isEndLifepath = false;
+    private bool _isEndLifepath = true;
     private bool _isCanMove = false;
     private bool _isMoveNow = false;
     public bool IsMoveNow { get { return _isMoveNow; } }
@@ -18,41 +18,41 @@ public class ProjectileArrow : MonoBehaviour
         _isCanMove = false;
         _isEndLifepath = false;
         gameObject.transform.position = position;
-        LMotion.Create(transform.localScale, scale, 0.5f).WithEase(Ease.InOutElastic).WithOnComplete(ReadyState).BindToLocalScale(transform);
+        gameObject.transform.localScale = Vector3.zero;
+        LMotion.Create(transform.localScale, scale, Random.Range(0.3f, 0.6f)).WithEase(Ease.InOutElastic).WithOnComplete(OnReadyState).BindToLocalScale(transform);
         gameObject.transform.rotation = Quaternion.Euler(0, angleY, 0);
     }
-
-    public void ReadyState() =>
-        _isCanMove = !_isCanMove;
 
     public bool MoveForward(float _projectileSpeed)
     {
         gameObject.transform.position += transform.forward * _projectileSpeed * Time.deltaTime;
         return gameObject.activeSelf;
     }
-    public bool MoveDownward(float _projectileSpeed)
+    public void MoveDownward(float _projectileSpeed)
     {
         if (_isCanMove)
         {
-            if (transform.position.y > 0)
-            {
-                _isMoveNow = true;
-                gameObject.transform.position += Vector3.down * _projectileSpeed * Time.deltaTime;
-            }
-            else
-            {
-                LMotion.Create(transform.localScale, Vector3.zero, 0.2f).WithEase(Ease.InOutElastic).WithOnComplete(OnDeactivate).BindToLocalScale(transform);
-                _isCanMove = false;
-            }
-        }
+            _isMoveNow = true;
+            _isCanMove = false;
 
-        return gameObject.activeSelf;
+            if (transform.position.y > 0)
+                LMotion.Create(transform.position.y, 0, _projectileSpeed).WithEase(Ease.InQuart).WithOnComplete(OnMoveState)
+                .BindToPositionY(transform);
+            else
+                LMotion.Create(transform.localScale, Vector3.zero, 0.2f).WithEase(Ease.InOutElastic)
+                .WithOnComplete(OnDeactivate).BindToLocalScale(transform);
+        }
     }
-    
+
     public void OnDeactivate()
     {
         gameObject.SetActive(false);
         _isEndLifepath = true;
         _isMoveNow = false;
     }
+
+    public void OnMoveState() =>
+        _isCanMove = !_isCanMove;
+    public void OnReadyState() =>
+        _isCanMove = !_isCanMove;
 }
